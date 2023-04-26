@@ -13,7 +13,6 @@ namespace VehicleRentalApi.Repositories
 
         public static IDbConnection DbConnection => new SqlConnection("Server=localhost\\SQLEXPRESS;Database=VehicleRentDb;Trusted_Connection=True;");
 
-        //public async Task<IEnumerable<VehicleRental>> GetAllRentals()
         public IEnumerable<Booking> GetAllRentals()
         {
             try
@@ -30,8 +29,7 @@ namespace VehicleRentalApi.Repositories
             }
             catch (Exception ex)
             {
-                //_logger.LogWarning($"{DateTime.Now}: Exception i LicensRepo/GetLicenses: {ex.Message}");
-                return null;
+                throw;
             }
         }
 
@@ -56,10 +54,7 @@ namespace VehicleRentalApi.Repositories
             }
             catch (Exception ex)
             {
-                //_logger.LogWarning($"{DateTime.Now}: \nException: {ex.Message}");1
-
-                //return -1;
-                return;
+                throw;
             }
         }
 
@@ -82,9 +77,7 @@ namespace VehicleRentalApi.Repositories
             }
             catch (Exception ex)
             {
-                //_logger.LogWarning($"{DateTime.Now}: \nException: {ex.Message}");
-                //return -1;
-                return;
+                throw;
             }
         }
 
@@ -101,17 +94,24 @@ namespace VehicleRentalApi.Repositories
 
         private Booking GetBooking(string registrationNumber, string personalIdNumber)
         {
-            using var connection = DbConnection;
-            connection.Open();
+            try
+            {
+                using var connection = DbConnection;
+                connection.Open();
 
-            var query = $"SELECT BookingNumber, RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km, RentEndTime, RentEndDistance_km, Cost " +
-                        $"FROM Booking " +
-                        $"WHERE RegistrationNumber = '{registrationNumber}' " +
-                        $"AND PersonalIdNumber = '{personalIdNumber}' " +
-                        $"AND RentEndTime IS NULL";
+                var query = $"SELECT BookingNumber, RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km, RentEndTime, RentEndDistance_km, Cost " +
+                            $"FROM Booking " +
+                            $"WHERE RegistrationNumber = '{registrationNumber}' " +
+                            $"AND PersonalIdNumber = '{personalIdNumber}' " +
+                            $"AND RentEndTime IS NULL";
 
-            var booking = connection.Query<Booking>(query).SingleOrDefault();
-            return booking;
+                var booking = connection.Query<Booking>(query).SingleOrDefault();
+                return booking;
+            } 
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         private Category GetCategory(string code)
@@ -152,8 +152,7 @@ namespace VehicleRentalApi.Repositories
             }
             catch (Exception ex)
             {
-                //_logger.LogWarning($"{DateTime.Now}: Exception i LicensRepo/GetLicenses: {ex.Message}");
-                return null;
+                throw;
             }
         }
     }

@@ -25,12 +25,12 @@ namespace VehicleRenting.Controllers
         [HttpPost("StartVehicleRent")]
         public void StartVehicleRent(string registrationNumber, string personalIdNumber, int rentStartDistance_km)
         {
-            _vehicleRentalRepo.StartVehicleRent(registrationNumber, personalIdNumber, rentStartDistance_km);
+            _vehicleRentalRepo.StartVehicleRent(registrationNumber.ToUpper(), personalIdNumber, rentStartDistance_km);
         }
         [HttpPost("EndVehicleRent")]
         public void EndVehicleRent(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
         {
-            _vehicleRentalRepo.EndVehicleRent(registrationNumber, personalIdNumber, rentEndDistance_km);
+            _vehicleRentalRepo.EndVehicleRent(registrationNumber.ToUpper(), personalIdNumber, rentEndDistance_km);
         }
     }
 }
