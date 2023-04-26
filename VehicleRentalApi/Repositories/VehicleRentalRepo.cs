@@ -146,6 +146,8 @@ namespace VehicleRentalApi.Repositories
                             $"WHERE RegistrationNumber = '{registrationNumber}'";
 
                 var vehicle = connection.Query<Vehicle>(query).SingleOrDefault();
+                if (vehicle == null)
+                    throw new ApplicationException("Vehicle does not exist");
 
                 Vehicle v = null;
                 if (vehicle != null)
@@ -157,9 +159,10 @@ namespace VehicleRentalApi.Repositories
                         v = new Combi(vehicle);
                 return v;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                Console.WriteLine($"Application exception: {ex.Message}");
+                throw ex;
             }
         }
     }
