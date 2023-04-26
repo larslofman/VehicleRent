@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using Dapper;
 using VehicleRentalApi.Models;
+using VehicleRentalApi.Factories;
 using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
@@ -84,7 +85,7 @@ namespace VehicleRentalApi.Repositories
         private double CalculateCost(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
         {
             var vehicle = GetVehicle(registrationNumber, personalIdNumber);
-            var category = GetCategory(vehicle.Category);
+            var category = GetCategory(vehicle.CategoryCode);
             var booking = GetBooking(registrationNumber, personalIdNumber);
             booking.RentEndDistance_km = rentEndDistance_km;
             booking.RentEndTime = DateTime.Now;
@@ -141,22 +142,16 @@ namespace VehicleRentalApi.Repositories
                 using var connection = DbConnection;
                 connection.Open();
 
-                var query = $"SELECT RegistrationNumber, Category, Distance_km, CargoSpace_m2 " +
-                            $"FROM Car " +
+                var query = $"SELECT RegistrationNumber, Category as CategoryCode " +
+                            $"FROM Vehicle " +
                             $"WHERE RegistrationNumber = '{registrationNumber}'";
 
                 var vehicle = connection.Query<Vehicle>(query).SingleOrDefault();
                 if (vehicle == null)
                     throw new ApplicationException("Vehicle does not exist");
 
-                Vehicle v = null;
-                if (vehicle != null)
-                    if (vehicle.Category == "P")
-                        v = new PassengerCar(vehicle);
-                    else if (vehicle.Category == "L")
-                        v = new Lorry(vehicle);
-                    else if (vehicle.Category == "C")
-                        v = new Combi(vehicle);
+                Vehicle v = VehicleFactory.CreateVehicleFromCategoryCode(vehicle);
+
                 return v;
             }
             catch (Exception ex)

@@ -9,15 +9,16 @@
         public Lorry(Vehicle v)
         {
             RegistrationNumber = v.RegistrationNumber;
-            Category = v.Category;
+            CategoryCode = v.CategoryCode;
             Distance_km = v.Distance_km;
-            CargoSpace_m2 = v.CargoSpace_m2;
         }
         public override double GetCost(Category category, Booking booking)
         {
-            TimeSpan days = booking.RentEndTime - booking.RentStartTime;
+            TimeSpan diffResult = booking.RentEndTime - booking.RentStartTime;
+            if (diffResult.Days < 0)
+                throw new ApplicationException("Faulty value/values for Booking.RentEndTime and/or Booking.RentStartTime.");
 
-            return category.TwentyFourHourBasePrice * Math.Max(days.Days, 1) * 1.3 +
+            return category.TwentyFourHourBasePrice * Math.Max(diffResult.Days, 1) * 1.3 +
                    category.KilometreBasePrice * (booking.RentEndDistance_km - booking.RentStartDistance_km) * 1.5;
         }
      }

@@ -1,0 +1,68 @@
+-- CREATE DATABASE VehicleRentDb
+
+USE VehicleRentDb
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- VEHICLE 
+CREATE TABLE dbo.Vehicle(
+	RegistrationNumber varchar(20) NOT NULL,
+	Category char(1) NULL,
+	CONSTRAINT PK_Vehicle_RegistrationNumber PRIMARY KEY CLUSTERED (RegistrationNumber)
+)
+GO
+
+INSERT INTO Vehicle VALUES('PER 001','P')
+INSERT INTO Vehicle VALUES('PER 002','P')
+INSERT INTO Vehicle VALUES('COM 001','C')
+INSERT INTO Vehicle VALUES('LOR 001','L')
+
+-- BOOKING
+CREATE TABLE dbo.Booking(
+	BookingNumber int IDENTITY(1,1) NOT NULL,
+	RegistrationNumber varchar(20) NULL,
+	PersonalIdNumber varchar(12) NULL,
+	RentStartTime datetime NULL,
+	RentStartDistance_km int NULL,
+	RentEndTime datetime NULL,
+	RentEndDistance_km int NULL,
+	Cost money NULL
+) ON [PRIMARY]
+CREATE UNIQUE INDEX idxBooking_RegistrationNumber_RentEndTime  ON Booking (RegistrationNumber, RentEndTime) 
+GO
+
+INSERT INTO Booking(RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km) VALUES ('PER 001', '102030-1234', DATEADD(DAY, -3, GETDATE()), 0)
+INSERT INTO Booking(RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km) VALUES ('PER 002', '102030-1234', DATEADD(DAY, -2, GETDATE()), 900)
+INSERT INTO Booking(RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km) VALUES ('COM 001', '102030-1234', DATEADD(DAY, -1, GETDATE()), 100)
+INSERT INTO Booking(RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km) VALUES ('LOR 001', '102030-1234', DATEADD(DAY, -1, GETDATE()), 1000)
+
+-- CATEGORY
+CREATE TABLE dbo.Category(
+	Code char(1) NULL,
+	Description varchar(50) NULL,
+	TwentyFourHourBasePrice float NULL,
+	KilometreBasePrice float NULL
+) ON [PRIMARY]
+GO
+
+INSERT INTO Category VALUES('C','Combi',270,5)
+INSERT INTO Category VALUES('L','Lorry',320,10)
+INSERT INTO Category VALUES('P','Passenger car',250,0)
+
+
+--drop table Vehicle
+--drop table Category
+--drop table Booking
+
+--delete from Vehicle
+--delete from Category
+--delete from Booking
+
+select * from Vehicle
+select * from Category
+select * from Booking
