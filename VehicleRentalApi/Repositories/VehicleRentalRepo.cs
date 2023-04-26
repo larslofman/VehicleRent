@@ -116,15 +116,22 @@ namespace VehicleRentalApi.Repositories
 
         private Category GetCategory(string code)
         {
-            using var connection = DbConnection;
-            connection.Open();
+            try
+            {
+                using var connection = DbConnection;
+                connection.Open();
 
-            var query = $"SELECT Code, Description, TwentyFourHourBasePrice, KilometreBasePrice " +
-                        $"FROM Category " +
-                        $"WHERE Code = '{code}'";
+                var query = $"SELECT Code, Description, TwentyFourHourBasePrice, KilometreBasePrice " +
+                            $"FROM Category " +
+                            $"WHERE Code = '{code}'";
 
-            var category = connection.Query<Category>(query).SingleOrDefault();
-            return category;
+                var category = connection.Query<Category>(query).SingleOrDefault();
+                return category;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         private Vehicle GetVehicle(string registrationNumber, string personalIdNumber)
@@ -150,7 +157,7 @@ namespace VehicleRentalApi.Repositories
                         v = new Combi(vehicle);
                 return v;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
