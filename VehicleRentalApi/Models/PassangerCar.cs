@@ -1,10 +1,19 @@
 ﻿namespace VehicleRentalApi.Models
 {
-    public class PassengerCar : Vehicle, IVehicleRental
+    public class PassengerCar : Vehicle   //, ICalculator
     {
-        public float GetPrice()
+        public PassengerCar(Vehicle v)
         {
-            return 10;
+            RegistrationNumber = v.RegistrationNumber;
+            Category = v.Category;
+            Distance_km = v.Distance_km;
+        }
+
+        public override double GetCost(Category category, Booking booking)
+        {
+            TimeSpan diffResult = booking.RentEndTime - booking.RentStartTime;
+
+            return category.TwentyFourHourBasePrice * Math.Max(diffResult.Days,1);
         }
     }
 }

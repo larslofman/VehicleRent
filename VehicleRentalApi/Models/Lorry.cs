@@ -2,14 +2,23 @@
 {
     public interface IVehicleRental
     {
-        float GetPrice();
+        float GetCost();
     }
-    public class Lorry : Vehicle, IVehicleRental
+    public class Lorry : Vehicle  //, ICalculator
     {
-        float CargoSpace { get; }
-        public float GetPrice()
+        public Lorry(Vehicle v)
         {
-            return 20;
+            RegistrationNumber = v.RegistrationNumber;
+            Category = v.Category;
+            Distance_km = v.Distance_km;
+            CargoSpace_m2 = v.CargoSpace_m2;
+        }
+        public override double GetCost(Category category, Booking booking)
+        {
+            TimeSpan days = booking.RentEndTime - booking.RentStartTime;
+
+            return category.TwentyFourHourBasePrice * Math.Max(days.Days, 1) * 1.3 +
+                   category.KilometreBasePrice * (booking.RentEndDistance_km - booking.RentStartDistance_km) * 1.5;
         }
      }
 }

@@ -11,17 +11,20 @@ namespace VehicleRentalApi.Repositories
     public class VehicleRentalRepo : IVehicleRentalRepo
     {
 
-        public static IDbConnection DbConnection => new SqlConnection("Server=localhost\\SQLEXPRESS;Database=VehicleRentDb;Trusted_Connection=True;Connection timeout=30;");
+        public static IDbConnection DbConnection => new SqlConnection("Server=localhost\\SQLEXPRESS;Database=VehicleRentDb;Trusted_Connection=True;");
 
         //public async Task<IEnumerable<VehicleRental>> GetAllRentals()
-        public IEnumerable<VehicleRental> GetAllRentals()
+        public IEnumerable<Booking> GetAllRentals()
         {
             try
             {
                 using var connection = DbConnection;
                 connection.Open();
-                var query = "SELECT BookingNumber, RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km, RentEndTime, RentEndDistance_km, Price FROM Booking";
-                List<VehicleRental> vehicleRentals = connection.Query<VehicleRental>(query).ToList();
+
+                var query = @"SELECT BookingNumber, RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km, " +
+                             "RentEndTime, RentEndDistance_km, Cost " +
+                             "FROM Booking";
+                List<Booking> vehicleRentals = connection.Query<Booking>(query).ToList();
 
                 return vehicleRentals;
             }
@@ -32,22 +35,22 @@ namespace VehicleRentalApi.Repositories
             }
         }
 
-        void IVehicleRentalRepo.StartVehicleRent(string RegistrationNumber, string PersonalIdNumber, int RentstartDistance_km)
+        void IVehicleRentalRepo.StartVehicleRent(string registrationNumber, string personalIdNumber, int rentstartDistance_km)
         {
             try
             {
                 using var connection = DbConnection;
                 connection.Open();
 
-               string insertQuery = @"INSERT INTO Booking (RegistrationNumber, PersonalIdNumber, RentStartTime, RentstartDistance_km) " +
-                                     "VALUES(@RegistrationNumber, @PersonalIdNumber, @RentStartTime, @RentstartDistance_km)";
+                string insertQuery = @"INSERT INTO Booking (RegistrationNumber, PersonalIdNumber, RentStartTime, RentstartDistance_km) " +
+                                      "VALUES(@registrationNumber, @personalIdNumber, @rentStartTime, @rentstartDistance_km)";
 
                 var result = connection.Execute(insertQuery, new
                 {
-                    RegistrationNumber,
-                    PersonalIdNumber,
-                    RentStartTime = DateTime.Now,
-                    RentstartDistance_km
+                    registrationNumber,
+                    personalIdNumber,
+                    rentStartTime = DateTime.Now,
+                    rentstartDistance_km
                 });
                 return;
             }
@@ -67,25 +70,90 @@ namespace VehicleRentalApi.Repositories
                 using var connection = DbConnection;
                 connection.Open();
 
-                string insertQuery = @$"UPDATE Booking " +
-                                      "SET RentEndTime = @RentEndTime, RentEndDistance_km = @RentEndDistance_km " +
-                                      "WHERE RegistrationNumber = @RegistrationNumber " +
-                                      "AND @PersonalIdNumber =  @PersonalIdNumber " +
-                                      "AND RentEndTime IS NULL"; 
+                var cost = CalculateCost(RegistrationNumber, PersonalIdNumber, RentEndDistance_km);
 
-                var result = connection.Execute(insertQuery, new
-                {
-                    RegistrationNumber,
-                    PersonalIdNumber,
-                    RentEndTime = DateTime.Now,
-                    RentEndDistance_km
-                });
+                string updateQuery = $"UPDATE Booking " +
+                                     $"SET RentEndTime = getdate(), RentEndDistance_km = {RentEndDistance_km}, Cost = {cost} " +
+                                     $"WHERE RegistrationNumber = '{RegistrationNumber}' " +
+                                     $"AND PersonalIdNumber = '{PersonalIdNumber}' " +
+                                     $"AND RentEndTime IS NULL";
+
+                 var result = connection.Execute(updateQuery);
             }
             catch (Exception ex)
             {
                 //_logger.LogWarning($"{DateTime.Now}: \nException: {ex.Message}");
                 //return -1;
                 return;
+            }
+        }
+
+        private double CalculateCost(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
+        {
+            var vehicle = GetVehicle(registrationNumber, personalIdNumber);
+            var category = GetCategory(vehicle.Category);
+            var booking = GetBooking(registrationNumber, personalIdNumber);
+            booking.RentEndDistance_km = rentEndDistance_km;
+            booking.RentEndTime = DateTime.Now;
+
+            return vehicle.GetCost(category, booking);
+        }
+
+        private Booking GetBooking(string registrationNumber, string personalIdNumber)
+        {
+            using var connection = DbConnection;
+            connection.Open();
+
+            var query = $"SELECT BookingNumber, RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km, RentEndTime, RentEndDistance_km, Cost " +
+                        $"FROM Booking " +
+                        $"WHERE RegistrationNumber = '{registrationNumber}' " +
+                        $"AND PersonalIdNumber = '{personalIdNumber}' " +
+                        $"AND RentEndTime IS NULL";
+
+            var booking = connection.Query<Booking>(query).SingleOrDefault();
+            return booking;
+        }
+
+        private Category GetCategory(string code)
+        {
+            using var connection = DbConnection;
+            connection.Open();
+
+            var query = $"SELECT Code, Description, TwentyFourHourBasePrice, KilometreBasePrice " +
+                        $"FROM Category " +
+                        $"WHERE Code = '{code}'";
+
+            var category = connection.Query<Category>(query).SingleOrDefault();
+            return category;
+        }
+
+        private Vehicle GetVehicle(string registrationNumber, string personalIdNumber)
+        {
+            try
+            {
+                using var connection = DbConnection;
+                connection.Open();
+
+                var query = $"SELECT RegistrationNumber, Category, Distance_km, CargoSpace_m2 " +
+                            $"FROM Car " +
+                            $"WHERE RegistrationNumber = '{registrationNumber}'";
+
+                var vehicle = connection.Query<Vehicle>(query).SingleOrDefault();
+
+                Vehicle v = null;
+                if (vehicle != null)
+                    if (vehicle.Category == "P")
+                        v = new PassengerCar(vehicle);
+                    else if (vehicle.Category == "L")
+                        v = new Lorry(vehicle);
+                    else if (vehicle.Category == "C")
+                        v = new Combi(vehicle);
+                return v;
+            }
+            catch (Exception ex)
+            {
+                //_logger.LogWarning($"{DateTime.Now}: Exception i LicensRepo/GetLicenses: {ex.Message}");
+                return null;
             }
         }
     }
