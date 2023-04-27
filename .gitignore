@@ -1,0 +1,24 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/TestVehicleRenatlApi/bin/Debug/net6.0
+/TestVehicleRenatlApi/obj
+/VehicleRentalApi/bin/Debug/net6.0/VehicleRentalApi.dll
+/VehicleRentalApi/bin/Debug/net6.0/VehicleRentalApi.pdb
+/VehicleRentalApi/obj/Debug/net6.0/ref/VehicleRentalApi.dll
+/VehicleRentalApi/obj/Debug/net6.0/refint/VehicleRentalApi.dll
+/VehicleRentalApi/obj/Debug/net6.0/VehicleRentalApi.pdb
+/VehicleRentalApi/obj/Debug/net6.0/VehicleRentalApi.dll
+/VehicleRentalApi/obj/Debug/net6.0/VehicleRentalApi.csproj.CoreCompileInputs.cache
+/VehicleRentalApi/obj/Debug/net6.0/VehicleRentalApi.csproj.AssemblyReference.cache
+/.vs/ProjectEvaluation/vehiclerental.projects.v6.1
+/.vs/ProjectEvaluation/vehiclerental.metadata.v6.1
+/.vs/VehicleRental/FileContentIndex/a901999c-7b5e-4e0c-ae7a-508e0e6cd63b.vsidx
+/.vs/VehicleRental/FileContentIndex/6cc4f769-2b87-489d-9f13-19f083e614fe.vsidx
+/.vs/VehicleRental/FileContentIndex/5e94bfa2-eed6-476a-9c59-8f0265ee6b57.vsidx
+/.vs/VehicleRental/FileContentIndex/4ff145fe-3ae9-4c41-a4fc-d5a07d0d77f6.vsidx
+/.vs/VehicleRental/v17/TestStore/0/testlog.manifest
+/.vs/VehicleRental/v17/TestStore/0/004.testlog
+/.vs/VehicleRental/v17/.suo
+/.vs/VehicleRental/DesignTimeBuild/.dtbcache.v2

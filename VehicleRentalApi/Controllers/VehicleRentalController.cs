@@ -17,20 +17,25 @@ namespace VehicleRenting.Controllers
         }
 
         [HttpGet("GetAllVehicleRentals")]
-        public IEnumerable<Booking> GetAllVehicleRentals()
+        public async Task<IEnumerable<Booking>> GetAllVehicleRentals()
         {
             var rentals = new VehicleRentalRepo().GetAllRentals();
             return rentals;
         }
         [HttpPost("StartVehicleRent")]
-        public void StartVehicleRent(string registrationNumber, string personalIdNumber, int rentStartDistance_km)
+        public async Task<IActionResult> StartVehicleRent(string registrationNumber, string personalIdNumber, int rentStartDistance_km)
         {
-            _vehicleRentalRepo.StartVehicleRent(registrationNumber.ToUpper(), personalIdNumber, rentStartDistance_km);
+             var rows = await _vehicleRentalRepo.StartVehicleRent(registrationNumber.ToUpper(), personalIdNumber, rentStartDistance_km);
+                
+            if(rows > 0)
+                return Ok(rows);
+            return BadRequest($"Cannot rent the car with registration number {registrationNumber}");
         }
         [HttpPost("EndVehicleRent")]
-        public void EndVehicleRent(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
+        public async Task<IActionResult> EndVehicleRent(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
         {
             _vehicleRentalRepo.EndVehicleRent(registrationNumber.ToUpper(), personalIdNumber, rentEndDistance_km);
+            return Ok();
         }
     }
 }

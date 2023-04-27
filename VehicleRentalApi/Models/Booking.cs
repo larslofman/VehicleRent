@@ -1,11 +1,6 @@
 ﻿namespace VehicleRentalApi.Models
 {
-    public interface IBooking
-    {
-        float GetCost { get; }
-    }
-
-    public class Booking
+     public class Booking
     {
         public int BookingNumber { get; set; }
         public string RegistrationNumber {get; set;}

@@ -1,10 +1,6 @@
 ﻿namespace VehicleRentalApi.Models
 {
-    public interface IVehicleRental
-    {
-        float GetCost();
-    }
-    public class Lorry : Vehicle  //, ICalculator
+    public class Lorry : Vehicle
     {
         public Lorry(Vehicle v)
         {

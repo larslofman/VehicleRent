@@ -3,9 +3,8 @@ using System.Data.SqlClient;
 using Dapper;
 using VehicleRentalApi.Models;
 using VehicleRentalApi.Factories;
-using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
-using System.Data.Common;
+using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 
 namespace VehicleRentalApi.Repositories
 {
@@ -24,22 +23,27 @@ namespace VehicleRentalApi.Repositories
                 var query = @"SELECT BookingNumber, RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km, " +
                              "RentEndTime, RentEndDistance_km, Cost " +
                              "FROM Booking";
-                List<Booking> vehicleRentals = connection.Query<Booking>(query).ToList();
+                var vehicleRentals = connection.Query<Booking>(query);
 
                 return vehicleRentals;
             }
             catch (Exception ex)
             {
-                throw;
+                Console.WriteLine($"Application exception in {MethodBase.GetCurrentMethod().Name}: {ex.Message}");
+                throw ex;
             }
         }
 
-        void IVehicleRentalRepo.StartVehicleRent(string registrationNumber, string personalIdNumber, int rentstartDistance_km)
+        async Task<int> IVehicleRentalRepo.StartVehicleRent(string registrationNumber, string personalIdNumber, int rentstartDistance_km)
         {
             try
             {
                 using var connection = DbConnection;
                 connection.Open();
+
+                var vehicle = GetVehicle(registrationNumber);
+                if (vehicle == null)
+                    throw new ApplicationException($"Cannot book an unknown car: {registrationNumber}");
 
                 string insertQuery = @"INSERT INTO Booking (RegistrationNumber, PersonalIdNumber, RentStartTime, RentstartDistance_km) " +
                                       "VALUES(@registrationNumber, @personalIdNumber, @rentStartTime, @rentstartDistance_km)";
@@ -51,15 +55,17 @@ namespace VehicleRentalApi.Repositories
                     rentStartTime = DateTime.Now,
                     rentstartDistance_km
                 });
-                return;
+
+                return result;
             }
             catch (Exception ex)
             {
-                throw;
+                Console.WriteLine($"Application exception in {MethodBase.GetCurrentMethod().Name}: {ex.Message}");
+                return 0;
             }
         }
 
-        void IVehicleRentalRepo.EndVehicleRent(string RegistrationNumber, string PersonalIdNumber, int RentEndDistance_km)
+        async Task<int> IVehicleRentalRepo.EndVehicleRent(string RegistrationNumber, string PersonalIdNumber, int RentEndDistance_km)
         {
             try
             {
@@ -72,28 +78,33 @@ namespace VehicleRentalApi.Repositories
                                      $"SET RentEndTime = getdate(), RentEndDistance_km = {RentEndDistance_km}, Cost = {cost} " +
                                      $"WHERE RegistrationNumber = '{RegistrationNumber}' " +
                                      $"AND PersonalIdNumber = '{PersonalIdNumber}' " +
-                                     $"AND RentEndTime IS NULL";
+                                     $"AND RentEndTime IS NULL " +
+                                     $"AND RentEndDistance_km >= RentStartDistance_km";
 
-                 var result = connection.Execute(updateQuery);
+                 var result = await connection.ExecuteAsync(updateQuery);
+                if (result == 0)
+                {
+                    throw new ApplicationException("There distance meter has decreased");
+                }
+                return result;
             }
             catch (Exception ex)
             {
-                throw;
+                Console.WriteLine($"Application exception in {MethodBase.GetCurrentMethod().Name}: {ex.Message}");
+                return 0;
             }
         }
 
-        private double CalculateCost(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
+        double CalculateCost(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
         {
-            var vehicle = GetVehicle(registrationNumber, personalIdNumber);
+            var vehicle = GetVehicle(registrationNumber);
             var category = GetCategory(vehicle.CategoryCode);
-            var booking = GetBooking(registrationNumber, personalIdNumber);
-            booking.RentEndDistance_km = rentEndDistance_km;
-            booking.RentEndTime = DateTime.Now;
+            var booking = GetBooking(registrationNumber, personalIdNumber, rentEndDistance_km);
 
             return vehicle.GetCost(category, booking);
         }
 
-        private Booking GetBooking(string registrationNumber, string personalIdNumber)
+        Booking GetBooking(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
         {
             try
             {
@@ -107,15 +118,22 @@ namespace VehicleRentalApi.Repositories
                             $"AND RentEndTime IS NULL";
 
                 var booking = connection.Query<Booking>(query).SingleOrDefault();
+                if (booking != null)
+                {
+                    booking.RentEndDistance_km = rentEndDistance_km;
+                    booking.RentEndTime = DateTime.Now;
+                }
+
                 return booking;
             } 
             catch (Exception ex)
             {
+                Console.WriteLine($"Application exception in {MethodBase.GetCurrentMethod().Name}: {ex.Message}");
                 throw;
             }
         }
 
-        private Category GetCategory(string code)
+        Category GetCategory(string code)
         {
             try
             {
@@ -129,13 +147,14 @@ namespace VehicleRentalApi.Repositories
                 var category = connection.Query<Category>(query).SingleOrDefault();
                 return category;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Application exception in {MethodBase.GetCurrentMethod().Name}: {ex.Message}");
                 throw;
             }
         }
 
-        private Vehicle GetVehicle(string registrationNumber, string personalIdNumber)
+        Vehicle GetVehicle(string registrationNumber)
         {
             try
             {
@@ -156,8 +175,8 @@ namespace VehicleRentalApi.Repositories
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Application exception: {ex.Message}");
-                throw ex;
+                Console.WriteLine($"Application exception in {MethodBase.GetCurrentMethod().Name}: {ex.Message}");
+                throw;
             }
         }
     }

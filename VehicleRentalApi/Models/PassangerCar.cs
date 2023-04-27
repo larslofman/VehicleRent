@@ -1,6 +1,6 @@
 ﻿namespace VehicleRentalApi.Models
 {
-    public class PassengerCar : Vehicle   //, ICalculator
+    public class PassengerCar : Vehicle
     {
         public PassengerCar(Vehicle v)
         {

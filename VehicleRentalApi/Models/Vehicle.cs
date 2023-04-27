@@ -1,12 +1,6 @@
 ﻿namespace VehicleRentalApi.Models
 {
-
-    //public interface IVehicle
-    //{
-    //    double GetCost();
-    //}
-
-    public class Vehicle //:IVehicle
+    public class Vehicle
     {
         public string RegistrationNumber { get; set; }
         public string CategoryCode { get; set; }

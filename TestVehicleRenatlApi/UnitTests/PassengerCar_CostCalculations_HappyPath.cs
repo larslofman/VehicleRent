@@ -43,7 +43,6 @@ namespace VehicleRentalApiTest.UnitTests
             Assert.AreEqual(result, 750);
         }
 
-
         [DataTestMethod]
         [DataRow("P")]
         public void FourDayRentOfPassengerCarCostIsCorrect(string categoryCode)
