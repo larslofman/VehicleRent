@@ -1,4 +1,3 @@
-using VehicleRentalApi.TwoWheelers.ManualBike.Repositories;
 using VehicleRentalApi.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IVehicleRentalRepo, VehicleRentalRepo>();
-builder.Services.AddScoped<VehicleRentalApi.TwoWheelers.Bike.Repositories.IBikeRepo, BikeRepo>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

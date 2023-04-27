@@ -19,8 +19,15 @@ namespace VehicleRenting.Controllers
         [HttpGet("GetAllVehicleRentals")]
         public async Task<IEnumerable<Booking>> GetAllVehicleRentals()
         {
-            var rentals = new VehicleRentalRepo().GetAllRentals();
-            return rentals;
+            var repo = new VehicleRentalRepo();
+            return await repo.GetAllRentals();
+        }
+
+        [HttpGet("GetAllVehicles")]
+        public async Task<IEnumerable<Vehicle>> GetAllVehicles()
+        {
+            var repo = new VehicleRentalRepo();
+            return await repo.GetAllVehicles();
         }
 
         [HttpPost("StartVehicleRent")]
@@ -31,7 +38,7 @@ namespace VehicleRenting.Controllers
             if(rows > 0) 
                 return Ok(rows);
             else
-                return BadRequest($"Cannot rent the car with registration number {registrationNumber}");
+                return BadRequest($"Cannot rent the unknown car with registration number {registrationNumber.ToUpper()}");
         }
 
         [HttpPost("EndVehicleRent")]
@@ -42,7 +49,7 @@ namespace VehicleRenting.Controllers
             if (rows > 0)
                 return Ok(rows);
             else
-                return BadRequest($"Fails to end a rent for a car with registration number {registrationNumber}");
+                return BadRequest($"Failed to end a rent for a car with registration number {registrationNumber.ToUpper()}. Is rentEndDistance_km correct?");
         }
     }
 }

@@ -12,7 +12,7 @@ namespace VehicleRentalApi.Repositories
 
         public static IDbConnection DbConnection => new SqlConnection("Server=localhost\\SQLEXPRESS;Database=VehicleRentDb;Trusted_Connection=True;");
 
-        public IEnumerable<Booking> GetAllRentals()
+        public async Task<IEnumerable<Booking>> GetAllRentals()
         {
             try
             {
@@ -22,9 +22,29 @@ namespace VehicleRentalApi.Repositories
                 var query = @"SELECT BookingNumber, RegistrationNumber, PersonalIdNumber, RentStartTime, RentStartDistance_km, " +
                              "RentEndTime, RentEndDistance_km, Cost " +
                              "FROM Booking";
-                var vehicleRentals = connection.Query<Booking>(query);
+                var vehicleRentals = await connection.QueryAsync<Booking>(query);
 
                 return vehicleRentals;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Application exception in {MethodBase.GetCurrentMethod().Name}: {ex.Message}");
+                throw ex;
+            }
+        }
+
+        public async Task<IEnumerable<Vehicle>> GetAllVehicles()
+        {
+            try
+            {
+                using var connection = DbConnection;
+                connection.Open();
+
+                var query = @"SELECT RegistrationNumber, Category " +
+                             "FROM Vehicle";
+                var vehicles = await connection.QueryAsync<Vehicle>(query);
+
+                return vehicles;
             }
             catch (Exception ex)
             {
@@ -40,7 +60,7 @@ namespace VehicleRentalApi.Repositories
                 using var connection = DbConnection;
                 connection.Open();
 
-                var vehicle = GetVehicle(registrationNumber);
+                var vehicle = await GetVehicle(registrationNumber);
                 if (vehicle == null)
                     throw new ApplicationException($"Cannot book an unknown car: {registrationNumber}");
 
@@ -71,14 +91,14 @@ namespace VehicleRentalApi.Repositories
                 using var connection = DbConnection;
                 connection.Open();
 
-                var cost = CalculateCost(RegistrationNumber, PersonalIdNumber, RentEndDistance_km);
+                var cost = await CalculateCost(RegistrationNumber, PersonalIdNumber, RentEndDistance_km);
 
                 string updateQuery = $"UPDATE Booking " +
                                      $"SET RentEndTime = getdate(), RentEndDistance_km = {RentEndDistance_km}, Cost = {cost} " +
                                      $"WHERE RegistrationNumber = '{RegistrationNumber}' " +
                                      $"AND PersonalIdNumber = '{PersonalIdNumber}' " +
                                      $"AND RentEndTime IS NULL " +
-                                     $"AND RentEndDistance_km >= RentStartDistance_km";
+                                     $"AND ISNULL({RentEndDistance_km},0) > ISNULL(RentStartDistance_km,0)";
 
                 var result = await connection.ExecuteAsync(updateQuery);
                 if (result == 0)
