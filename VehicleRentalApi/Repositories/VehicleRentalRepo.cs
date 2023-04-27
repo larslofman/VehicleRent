@@ -3,7 +3,6 @@ using System.Data.SqlClient;
 using Dapper;
 using VehicleRentalApi.Models;
 using VehicleRentalApi.Factories;
-using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 
 namespace VehicleRentalApi.Repositories
@@ -81,7 +80,7 @@ namespace VehicleRentalApi.Repositories
                                      $"AND RentEndTime IS NULL " +
                                      $"AND RentEndDistance_km >= RentStartDistance_km";
 
-                 var result = await connection.ExecuteAsync(updateQuery);
+                var result = await connection.ExecuteAsync(updateQuery);
                 if (result == 0)
                 {
                     throw new ApplicationException("There distance meter has decreased");
@@ -95,16 +94,16 @@ namespace VehicleRentalApi.Repositories
             }
         }
 
-        double CalculateCost(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
+        async Task <double> CalculateCost(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
         {
-            var vehicle = GetVehicle(registrationNumber);
-            var category = GetCategory(vehicle.CategoryCode);
-            var booking = GetBooking(registrationNumber, personalIdNumber, rentEndDistance_km);
+            var vehicle = await GetVehicle(registrationNumber);
+            var category = await GetCategory(vehicle.CategoryCode);
+            var booking = await GetBooking(registrationNumber, personalIdNumber, rentEndDistance_km);
 
             return vehicle.GetCost(category, booking);
         }
 
-        Booking GetBooking(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
+        async Task<Booking> GetBooking(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
         {
             try
             {
@@ -133,7 +132,7 @@ namespace VehicleRentalApi.Repositories
             }
         }
 
-        Category GetCategory(string code)
+        async Task<Category> GetCategory(string code)
         {
             try
             {
@@ -154,7 +153,7 @@ namespace VehicleRentalApi.Repositories
             }
         }
 
-        Vehicle GetVehicle(string registrationNumber)
+        async Task<Vehicle> GetVehicle(string registrationNumber)
         {
             try
             {
