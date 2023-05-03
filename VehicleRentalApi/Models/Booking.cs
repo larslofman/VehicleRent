@@ -9,5 +9,6 @@
         public int RentStartDistance_km { get; set; }
 	    public DateTime RentEndTime { get; set; }
         public int RentEndDistance_km { get; set; }
+        public double Cost { get; set; }
     }
 }
