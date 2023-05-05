@@ -64,10 +64,10 @@ namespace VehicleRentalApi.Repositories
                 if (vehicle == null)
                     throw new ApplicationException($"Cannot book an unknown car: {registrationNumber}");
 
-                string insertQuery = @"INSERT INTO Booking (RegistrationNumber, PersonalIdNumber, RentStartTime, RentstartDistance_km) " +
-                                      "VALUES(@registrationNumber, @personalIdNumber, @rentStartTime, @rentstartDistance_km)";
+                string insertQuery = @"INSERT INTO Booking (RegistrationNumber, PersonalIdNumber, RentStartTime, RentstartDistance_km)
+                                       VALUES(@registrationNumber, @personalIdNumber, @rentStartTime, @rentstartDistance_km)";                                     ;
 
-                var result = connection.Execute(insertQuery, new
+                var result = await connection.ExecuteAsync(insertQuery, new
                 {
                     registrationNumber,
                     personalIdNumber,
@@ -84,23 +84,32 @@ namespace VehicleRentalApi.Repositories
             }
         }
 
-        async Task<int> IVehicleRentalRepo.EndVehicleRent(string RegistrationNumber, string PersonalIdNumber, int RentEndDistance_km)
+        async Task<int> IVehicleRentalRepo.EndVehicleRent(string registrationNumber, string personalIdNumber, int rentEndDistance_km)
         {
             try
             {
                 using var connection = DbConnection;
                 connection.Open();
 
-                var cost = await CalculateCost(RegistrationNumber, PersonalIdNumber, RentEndDistance_km);
+                var cost = await CalculateCost(registrationNumber, personalIdNumber, rentEndDistance_km);
 
-                string updateQuery = $"UPDATE Booking " +
-                                     $"SET RentEndTime = getdate(), RentEndDistance_km = {RentEndDistance_km}, Cost = {cost} " +
-                                     $"WHERE RegistrationNumber = '{RegistrationNumber}' " +
-                                     $"AND PersonalIdNumber = '{PersonalIdNumber}' " +
-                                     $"AND RentEndTime IS NULL " +
-                                     $"AND ISNULL({RentEndDistance_km},0) > ISNULL(RentStartDistance_km,0)";
+                string updateQuery = @"UPDATE Booking 
+                                       SET RentEndTime = getdate(), 
+                                       RentEndDistance_km = @rentEndDistance_km, 
+                                       Cost = @cost
+                                       WHERE RegistrationNumber = @registrationNumber 
+                                       AND PersonalIdNumber = @personalIdNumber 
+                                       AND RentEndTime IS NULL 
+                                       AND ISNULL(@rentEndDistance_km, 0) > ISNULL(RentStartDistance_km, 0)";
 
-                var result = await connection.ExecuteAsync(updateQuery);
+                var result = await connection.ExecuteAsync(updateQuery, new
+                {
+                    rentEndDistance_km,
+                    cost,
+                    registrationNumber,
+                    personalIdNumber,
+                });
+
                 if (result == 0)
                 {
                     throw new ApplicationException("There distance meter has decreased");

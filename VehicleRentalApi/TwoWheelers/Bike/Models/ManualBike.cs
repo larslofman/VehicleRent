@@ -1,8 +1,4 @@
-﻿using System.Data;
-using System.Data.Common;
-using System.Data.SqlClient;
-
-namespace VehicleRentalApi.TwoWheelers.Bike.Models
+﻿namespace VehicleRentalApi.TwoWheelers.Bike.Models
 {
     public class ManualBike : IBike
     {
